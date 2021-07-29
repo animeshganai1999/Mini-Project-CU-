@@ -1,0 +1,104 @@
+OBJECTIVE : Our objective is to route a droplet from source to sink by bypassing all the obstracles in minimum Time.Here we proposed ILP fromulation for that droplet routing for Square chip electrode.
+
+    • We use cross-referencing Biochip, which allows the control of an N × M grid array with only N + M control pins
+
+ELECTRODE ACTIVATION CONSTRAINT
+    • EC – I : If droplet is at cell (x,y) at time t then the four diagonal a	     djacent cell cannot be activated at time t+1.
+    • EC – II : If the droplet moves from cell (Xt ,Yt) to cell (Xt+1 ,Yt+1) 	      from time t to t+1 then all the 8 neighbouring cell of 		      (Xt+1 ,Yt+1) can’t be activated at t+1.		       	      
+
+NOTATIONS USED IN ILP FORMULATION
+
+    1. H : Biochip height.
+    2. W : Biochip width.
+    3. T : Maximum droplet transportation time.
+    4. Tl : actual maximum droplet transportation time.
+    5. C : Set of all availabe cells.
+    6. D : Set of availabe diagonal cell of (x,y).
+    7. O : set of all obstracle cell.
+    8. (Sx,Sy) : Source location of the droplet .
+    9. (Skx,Sky) : Sink location of the droplet.
+    10. E5(x,y) : Set of cell (x,y) and it’s 4 adjacent cell.
+    11. E5(x,y) : Set of  (x,y)’s 4 adjacent cell.
+    12. E8(x,y) : Set of cell (x,y)’s 8 adjacent cell.
+    13. E9(x,y) : Set of cell (x,y) and it’s 9 adjacent cell.
+    14. C(x,y,t) : 0/1 variable represents wheather the droplet present at cell (x,y) or not at time t.
+    15. LXC(t) : 0/1 variable represents column x is set to voltage low at time t.
+    16. HXC(t) : 0/1 variable represents column x is set to voltage high at time t.
+    17. Lyr(t) : 0/1 variable represents row y is set to voltage low at time t.
+    18. Hyr(t) : 0/1 variable represents row y is set to voltage high at time t.
+    19. atx,y : 0/1 variable represent cell (x,y) activated at time t.
+    20. b1x,y(t) : 1 means,  cell (x,y) is activated and the column x is assigned to low voltage and row y is assigned to high voltage at time t.
+    21. b2x,y(t) : 1 means,  cell (x,y) is activated and the column x is assigned to high voltage and row y is assigned to low voltage at time t.
+
+
+Objective Function :
+	The goal is to minimize the latest time the droplet reaches to it’s sink.
+	minimize : Tl 
+
+Constraints of basic ILP formulation:
+
+1. source requirement:
+	we assume that the droplet is present at its source location at time 0
+	C(Sx,Sy,0) = 1 
+
+2. Sink requirement:
+	The droplet must reach its sink. 
+	>= 1
+
+	If the droplet reach its sink it should remains there. (Let the droplet 	reaches it’s sink at time t then it shoud be there at time t+1)
+	C(SKx,Sky,t) – C(SKx,Sky,t+1) <= 0
+								0<= t <T
+
+3. Exclusivity constraint:
+	At each time stamp droplet can present only at one location (as we are 	moving droplet from one location to oter location we don’t want to split 	the droplet)
+	= 1
+						 , 0<= t < T
+
+4. Droplet transportation Time :
+	if the droplet reaches it’s sink at time t+1 , then the time when it reaches 	its sink can be computed as t+1 times difference between C(x,y,t+1) and 	C(x,y,t)
+	(t+1)((x,y,t+1)  - (x,y,t) ) <= Tl 		, 0<= t < T
+
+5. static fludic constraints :
+	The droplet should’t present in the obstracle cell at any point of time
+	 = 0   ,				0<= t < T
+
+6. Dynamic fludic constraints :
+	when droplet moves it should’t enter into any obstracle cell. If a droplet 	present in cell (x,y) at time t (Which is definately not an obstracle cell) it 	should’t move to any obstracle cell at time t+1.
+	C(x,y,t) +   <= 1		,0<= t < T
+	droplet can move any one of it’s four adjacent cell at time t+1 (droplet 	can’t stall)
+	C(x,y,t) +  <= 2           ,0<= t < T
+
+7. Voltage assignment and cell activation:
+	Each row/column can be assigned one voltage (high or low) at any time. 	
+	LXC(t) + HXC(t) <= 1  		0 ≤ x < W, 0 ≤ t < T
+	Lyr(t) + Hyr(t) <= 1		0 ≤ y < H, 0 ≤ t < T
+
+	A cell is activated if and only if it is in the intersection of a row with 	high (low) voltage and a column with low (high) voltage. 
+	(LXC(t) and Hyr(t)) or (HXC(t) and Lyr(t)) <-> atx,y	∀(x, y) ∈ C, 0 ≤ t < T
+	
+	We use the following five equations and two additional variables to 	linearize constraint.
+
+	LXC(t) + Hyr(t) – 2b1x,y(t) >= 0 	[0+0-0 ,1+0-0,0+1-0,1+1-2]
+	LXC(t) + Hyr(t) – b1x,y(t) <= 1		[0+0-0 ,1+0-0,0+1-0,1+1-1]
+	HXC(t) + Lyr(t) – 2b2x,y(t) >= 0
+	HXC(t) + Lyr(t) – b2x,y(t) <= 1
+
+	cell (x,y) is activated then either b1x,y(t) = 1 or b2x,y(t) = 1 , but not both
+	atx,y - b1x,y(t) – b2x,y(t) = 0
+
+	b1x,y(t) = 1 means,  cell (x,y) is activated and the column x is assigned to 	low voltage and row y is assigned to high voltage.
+	b2x,y(t) = 1 means,  cell (x,y) is activated and the column x is assigned to 	high voltage and row y is assigned to low voltage.
+	Both b1x,y(t)  and b2x,y(t)  can’t be 1 at a time.
+
+
+
+
+8. Eletrode constraint:
+	EC – I 
+		C(x,y,t) + at+1x’,y’ <= 1
+							(x’,y’) ∈D(x,y)   , 0 <= t < T
+
+	EC – II
+		C(x,y,t) + at+1x’,y’ <= 1   		(x’,y’) ∈E8(Xt+1,Yt+1) ,  0 <= t < T
+
+		(cell (x,y) is active at time t, and the droplet moves to cell (xt+1,yt+1) 		at time t+1, then all the eight adjacent cell of (xt+1,yt+1) must be 			deactivated at time t+1 	)	
